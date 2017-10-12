@@ -1,4 +1,3 @@
-import sys
 import util
 import json
 from StateHandler import StateHandler

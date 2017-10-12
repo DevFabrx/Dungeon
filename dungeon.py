@@ -5,13 +5,14 @@ import util
 from room import Room
 from enemy import Enemy
 from item import Item
+from player import Player
 
 START, LOOK, MOVE, OPEN, FIGHT, ATTACK, INVENTORY, MENU, SUCCESS, EXIT, QUIT = range(11)
 
-# TODO Implement States
 class Start(State):
     def run(self, gamedata, *args):
         return LOOK, gamedata
+
     def next(self, next_state):
         return Dungeon.look
 
@@ -19,9 +20,13 @@ class Start(State):
 class Look(State):
     def run(self, gamedata, *args):
         print(gamedata.rooms[gamedata.room_index].description)
-        return LOOK, gamedata
+        if gamedata.rooms[gamedata.room_index].enemies is not None:
+            gamedata.rooms[gamedata.room_index].print_enemy_stats()
+        print("")
+        return MENU, gamedata
+
     def next(self, next_state):
-        return Dungeon.look
+        return Dungeon.menu
 
 class Menu(State):
     def run(self, gamedata, *args):
@@ -33,30 +38,28 @@ class Menu(State):
         print("5. \t run away (leave dungeon)")
         i = input("> ")
         if util.check_input(i, "0","1","2","3","4","5"):
-            # TODO return what each number does
-            if i == 0:
-                print(gamedata.room.description)
+            if i == str(0):
                 return LOOK, gamedata
-            elif i == 1:
+            elif i == str(1):
                 return MOVE, gamedata
-            elif i == 2:
+            elif i == str(2):
                 if gamedata.rooms[gamedata.room_index].treasure is not None:
                     return OPEN, gamedata
                 else:
-                    print("No treasure found in this room")
+                    print("There is no treasure found in this room.")
                     return MENU, gamedata
-            elif i == 3:
+            elif i == str(3):
                 if gamedata.rooms[gamedata.room_index].enemies is not None:
-                    return FIGHT, gamedata
+                    return ATTACK, gamedata
                 else:
-                    print("There are no enemies in this room")
+                    print("There are no enemies in this room.")
                     return MENU, gamedata
-            elif i == 4:
+            elif i == str(4):
                 return INVENTORY, gamedata
-            elif i == 5:
+            elif i == str(5):
                 return EXIT, gamedata
         else:
-            print("Please enter a number from 0-6")
+            print("Please enter a number from 0-5")
             return MENU, gamedata
 
     def next(self, next_state):
@@ -74,14 +77,73 @@ class Menu(State):
             return Dungeon.menu
         elif next_state == EXIT:
             return Dungeon.exit
+        elif next_state == ATTACK:
+            return Dungeon.attack
 
 
-class Fight(State):
+class Attack(State):
     def run(self, gamedata, *args):
-        if gamedata.rooms[gamedata.room_index].enemies is not None:
+        gamedata.rooms[gamedata.room_index].print_enemy_stats()
+        i = input("Which enemy do you want to attack? [0-1]")
+        # check for the allowed inputs
+        if util.check_input(i, "0", "1"):
+            gamedata.target_enemy = int(i)
+            return FIGHT, gamedata
+        else:
+            print("Please choose an enemy to attack [0-1]")
+            gamedata.rooms[gamedata.room_index].print_enemy_stats()
+            return ATTACK, gamedata
 
 
     def next(self, next_state):
+        if next_state == FIGHT:
+            return Dungeon.fight
+        if next_state == ATTACK:
+            return Dungeon.attack
+
+
+#TODO Implement Attack State
+class Fight(State):
+    def run(self, gamedata, *args):
+        enemy = gamedata.rooms[gamedata.room_index].enemies[gamedata.target_enemy]
+        player = gamedata.player
+        damage_to_enemy = util.calc_damage(player, enemy)
+        enemy.hp -= damage_to_enemy
+        gamedata.rooms[gamedata.room_index].enemies[gamedata.target_enemy].hp = enemy.hp
+        print("You dealt {0} damage to {1}.".format(damage_to_enemy, enemy.type))
+        if enemy.hp <= 0:
+            gamedata.rooms[gamedata.room_index].enemies.remove(enemy)
+            print("You killed {0}".format(enemy.type))
+        for enemy in gamedata.rooms[gamedata.room_index].enemies:
+            damage_to_player = util.calc_damage(enemy, player)
+            player.hp -= damage_to_player
+            gamedata.player.hp = player.hp
+            print("{0} dealt {1} damage to {2}".format(enemy.name, damage_to_player, player.name))
+            if player.hp <= 0:
+                print("You died.")
+                gamedata.player.hp = 10
+                gamedata.player.inventory = []
+                return QUIT, gamedata
+
+
+    def next(self, next_state):
+        pass
+
+
+#TODO Implement Inventory State
+class Inventory(State):
+    def run(self, gamedata, *args):
+        pass
+    def next(self, next_state):
+        pass
+
+# TODO implement Success State
+class Success(State):
+    def run(self, gamedata, *args):
+        pass
+    def next(self, next_state):
+        pass
+
 
 class Open(State):
     def run(self, gamedata, *args):
@@ -99,7 +161,12 @@ class Open(State):
 class Move(State):
     def run(self, gamedata, *args):
         if gamedata.room_index <= 4:
-            gamedata.room_index += 1
+            if gamedata.rooms[gamedata.room_index].enemies is not None:
+                print(gamedata.room_index)
+                print("You cannot move forward, because there are enemies blocking your way.")
+                return MENU, gamedata
+            else:
+                gamedata.room_index += 1
             return START, gamedata
         else:
             return EXIT, gamedata
@@ -109,6 +176,8 @@ class Move(State):
             return Dungeon.start
         if next_state == EXIT:
             return Dungeon.exit
+        if next_state == MENU:
+            return Dungeon.menu
 
 class Exit(State):
     def run(self, gamedata, *args):
@@ -128,32 +197,38 @@ class Dungeon(StateHandler):
    def __init__(self,gamedata):
 
        room1 = Room()
-       room1.description = "You enter the dungeon through a huge gate, that was put up generations ago. The gate is covered in golden " \
-                             "runes of old speech that should protect anyone from going inside the dungeon." \
-                             "There is almost no ligth in the cave, so you light up a torch. The light from the torch floods the big hall you find yourself" \
-                             "standing in. The air in the dungeon is moist and cold and you can sense the presence of something evil."
+       room1.description = "You enter the dungeon through a huge gate, that was build generations ago. The gate is covered in golden \n" \
+                           "runes of old speech that should protect anyone from going inside the dungeon.\n" \
+                           "You enter the dungeon. There is almost no ligth in the cave, so you light up a torch. " \
+                           "The light from the torch floods the big hall you find yourself\n" \
+                           "standing in. The air in the dungeon is moist and cold and you can sense the presence of something evil."
 
        room2 = Room()
-       room2.enemies = [Enemy("Orc", health=30, damage=5), Enemy("Goblin", health=40, damage = 10)]
+       room2_enemy1 = Enemy(name="Orc", hp=30)
+       room2_enemy2 = Enemy(name="Goblin", hp=15, speed=20)
+       room2.enemies = [room2_enemy1, room2_enemy2]
        room2.description = "You find {0} enemies.".format(len(room2.enemies))
 
        room3 = Room()
-       room3.enemies = [Enemy("Orc", health=30, damage=5), Enemy("Goblin", health=40, damage = 10)]
+       room3_enemy1 = Enemy(name="Uruk-Hai", hp=50, defense=25, strength=20)
+       room3_enemy2 = Enemy(name="Ork Archer", hp=20, agility=25)
+       room3.enemies = [room3_enemy1, room3_enemy2]
        room3.description = "You find {0} enemies.".format(len(room3.enemies))
 
        room4 = Room()
        room4.description = "In this room you find a treasure"
-       room4.treasure = Item("Sword", price = 100, influenced_attribute = "damage", value = 40)
+       room4.treasure = Item(name="Sword", price=100, influenced_attribute="damage", value=40)
 
 
        room5 = Room()
-       room5.boss = Enemy(health=150, damage=20, type="Boss")
+       room5.boss = [Enemy(hp=150, damage=20, type="Boss")]
        room5.description = "In this room you find the boss"
 
         # create array of rooms
        rooms = [room1, room2, room3, room4, room5]
        gamedata.rooms = rooms
        gamedata.room_index = 0
+       gamedata.target_enemy = None
 
 
        StateHandler.__init__(self, Dungeon.start,
@@ -177,7 +252,13 @@ Dungeon.quit = Quit()
 
 if __name__ == '__main__':
     gamedata = GameData()
-    player_file = util.create_player_file()
+    gamedata.player = Player()
+    gamedata.player.strength = 25
+    gamedata.player.defense = 20
+    gamedata.player.agility = 20
+    gamedata.player.speed = 35
+    gamedata.player.name = "Horst"
+    player_file = util.create_player_file(gamedata)
     gamedata.player = util.load_player("player.json")
     dun = Dungeon(gamedata)
     gd = dun.run()
