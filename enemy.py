@@ -12,7 +12,7 @@ class Enemy(Player):
         self.special = 0
         self.lvl = 1
         self.xp = 0
-        self.gold = 0  # testing purpose (salesman)
+        self.gold = 1  # testing purpose (salesman)
         self.hp = 25
         self.inventory = []
         self.__dict__.update(player)

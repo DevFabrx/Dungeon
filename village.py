@@ -6,21 +6,22 @@ from player import Player
 from gamedata import GameData
 from State import State
 from dungeon import Dungeon
-from inventory import Inventory
-from retailer import Retailer
-from smith import Smith
-from druid import Druid
+import math
+from item import Item
+
+
 
 
 
 # define states
-START, LIST, CHOOSE, DUNGEON, INVENTORY, RETAILER, SMITH, DRUID, SAVE, QUIT = range(5)
+START, LIST, CHOOSE, DUNGEON, INVENTORY, RETAILER, SMITH, DRUID, SAVE, QUIT = range(10)
 
 class Start(State):
     def run(self, gamedata, *args):
         print("You are now entering the village")
         print("The name of the village is Nurmgrad")
         print("The weather is cloudy, light rain is falling and people are moving silently in the streets.")
+        return LIST, gamedata
 
     def next(self, next_state):
         return Village.list
@@ -45,7 +46,7 @@ class List(State):
 class Choose(State):
     def run(self, gamedata, *args):
         i = input("Please choose your destination [0-6]: ")
-        if util.check_input(i, 0,1,2,3,4,5,6):
+        if util.check_input(i, "0","1","2","3","4","5","6"):
             if i == "0":
                 return DUNGEON, gamedata
             elif i ==  "1":
@@ -68,29 +69,80 @@ class Choose(State):
         if next_state == CHOOSE:
             return Village.choose
         elif next_state == DUNGEON:
-            dungeon_gd = Dungeon(gamedata).run()
-            return Village.start
+            return Village.dungeon
         elif next_state == INVENTORY:
-            inventory_gd = Inventory(gamedata).run()
-            Village.gamedata = inventory_gd
-            return Village.start
+            return Village.inventory
         elif next_state == RETAILER:
-            retailer_gd = Retailer(gamedata).run()
-            Village.gamedata = retailer_gd
-            return Village.start
+            return Village.retailer
         elif next_state == SMITH:
-            smith_gd = Smith(gamedata).run()
-            Village.gamedata = smith_gd
-            return Village.start
+            return Village.smith
         elif next_state == DRUID:
-            druid_gd = Druid(gamedata).run()
-            Village.gamedata = druid_gd
-            return Village.start
+            return Village.druid
         elif next_state == SAVE:
             return Village.save
         elif next_state == QUIT:
             return Village.quit
 
+class Inventory(State):
+    def run(self, gamedata, *args):
+        pass
+    def next(self, next_state):
+        pass
+
+
+# TODO Implement Smith
+class Smith(State):
+    def run(self, gamedata, *args):
+        pass
+    def next(self, next_state):
+        pass
+
+# TODO Implement Retailer
+class Retailer(State):
+    def run(self, gamedata, *args):
+        if len(gamedata.player.inventory) == 0:
+            print("Sorry you have nothing to sell.")
+            print("Thanks for visiting")
+            return LIST, gamedata
+        print("Welcome to the retailer {0}!".format(gamedata.player.name))
+        print("This is what I would pay for your items:")
+        util.print_retailer_offering(gamedata.player)
+        print("You have {0} gold.".format(gamedata.player.gold))
+        i = input("Type 'quit' or the name of the item you want to sell:\n> ")
+        allowed_inputs = util.get_inventory_names(gamedata.player.inventory)
+        allowed_inputs.append("quit")
+        if util.check_input(i, *allowed_inputs):
+            if i == "quit":
+                return LIST, gamedata
+            chosen_item = next((x for x in gamedata.player.inventory if x.name == i), None)
+            gamedata.player.gold += math.floor(chosen_item.price*0.5)
+            print("You have chosen {0}.\nYou now have {1} gold.\nRemoved item from inventory."
+                  .format(chosen_item.name, gamedata.player.gold))
+            gamedata.player.inventory.remove(chosen_item)
+        else:
+            return RETAILER, gamedata
+
+
+
+    def next(self, next_state):
+        if next_state == LIST:
+            return Village.list
+        if next_state == RETAILER:
+            return Village.retailer
+
+
+# TODO Implement Druid
+class Druid(State):
+    def run(self, gamedata, *args):
+        pass
+    def next(self, next_state):
+        pass
+
+class Dungeon(State):
+    def run(self, gamedata, *args):
+        pass
+    def next(self, next_state):
+        pass
 
 class Save(State):
     def run(self, gamedata, *args):
@@ -115,12 +167,6 @@ class Village(StateHandler):
                                                     Village.inventory, Village.retailer,
                                                     Village.smith, Village.druid, Village.save, Village.quit}, Quit(),gamedata)
 
-    def run(self, *args):
-        rooms = []
-        for i in rooms:
-            StateHandler.run()
-
-
 
 Village.start = Start()
 Village.list = List()
@@ -136,7 +182,15 @@ Village.quit = Quit()
 
 if __name__ == '__main__':
     gamedata = GameData()
-    player_file = util.create_player_file()
+    gamedata.player = Player()
+    gamedata.player.strength = 25
+    gamedata.player.defense = 20
+    gamedata.player.agility = 20
+    gamedata.player.speed = 35
+    gamedata.player.name = "Horst"
+    gamedata.player.gold = 100
+    gamedata.player.inventory = [Item(name="Potion", price = 15, influenced_attribute="hp", value="30")]
+    player_file = util.create_player_file(gamedata)
     gamedata.player = util.load_player("player.json")
     vil = Village(gamedata)
-    gd = vil.run()
+    vil_gd = vil.run()

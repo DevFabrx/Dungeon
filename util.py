@@ -19,6 +19,7 @@ def calc_damage(attacker, defender):
     attacker_strength = attacker.strength
     attacker_speed = attacker.speed
     attacker_agility = attacker.agility
+
     attacker_damage_brutto = (attacker_strength * 0.5) + (attacker_speed * 0.2) + (attacker_agility * 0.2)
 
     defender_hp = defender.hp
@@ -53,11 +54,10 @@ def print_character_stats(character):
     print("\tDefense: {0}".format(character.defense))
 
 
-def open_treasure(items):
+def open_treasure(treasure):
     print("You found:")
-    for i in items:
-        print("{0} /t price: {2}".format(items[i].name, items[i].price))
-        print("{0} /t value: {2}".format(items[i].influenced_attribute, items[i].value))
+    print("{0} \t price: {1} \t influenced attribute: {2} \t value: {3}".format(
+        treasure.name, treasure.price,treasure.influenced_attribute, treasure.value))
 
 
 def load_player(savefile):
@@ -71,6 +71,26 @@ def load_player(savefile):
     player.inventory = items
     return player
 
+def print_player_health(player):
+    print("You have got {0} hp left!".format(player.hp))
+
+def print_inventory_contents(player):
+    for item in player.inventory:
+        print("* {0} \t --increases {1} by {2}".format(item.name, item.influenced_attribute, item.value))
+
+def print_retailer_offering(player):
+    for item in player.inventory:
+        print("* {0} for {1} gold".format(item.name, math.floor(item.price*0.5)))
+
+
+def get_inventory_names(inventory):
+    name_list =[]
+    for item in inventory:
+        name_list.append(item.name)
+    return name_list
+
+def get_inventory_item(player, item_name):
+    return player.inventory[player.inventory.index(item_name)]
 
 def reset_player_stats(gamedata):
     for stat in vars(gamedata.player):
