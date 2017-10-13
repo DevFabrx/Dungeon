@@ -22,7 +22,7 @@ if __name__ == '__main__':
     gamedata = GameData()
 
 
-    if args.savefile != None:
+    if args.savefile is not None:
         gamedata.player = util.load_player(args.savefile)
     else:  # args.create_player != None or (args.savefile == None and args.create_player == False):
         gamedata.player = Player()

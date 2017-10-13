@@ -89,13 +89,13 @@ class Defense(State):
 
 class Confirm(State):
     def run(self, gamedata, *args):
-        if int(gamedata.player.getAbilityPointSum()) > 100:
+        if int(gamedata.player.get_ability_point_sum()) > 100:
             print("Sorry it seems like you spent more than 100 ability points on your character..."
                   " try that again!")
             util.reset_player_stats(gamedata)
             return STRENGTH, gamedata
-        if gamedata.player.getAbilityPointSum() < 100:
-            print("You have {0} Points left to use. Do you want to use them?".format(gamedata.player.getAbilityPointSum()))
+        if gamedata.player.get_ability_point_sum() < 100:
+            print("You have {0} Points left to use. Do you want to use them?".format(gamedata.player.get_ability_point_sum()))
             i = input("Y/N: ")
             if i == "Y" or i == "y":
                 util.reset_player_stats(gamedata)
@@ -103,7 +103,7 @@ class Confirm(State):
             else:
                 pass # continue if player dont want to spend unused points
         util.print_character_stats(gamedata.player)
-        check = input("Is this correct? (Y/N) ")
+        check = input("Is this correct? (Y/N)\n> ")
         if check == "Y" or check == "y":
             return STORE, gamedata
         elif check == "N" or check == "n":

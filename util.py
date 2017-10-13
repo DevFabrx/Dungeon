@@ -82,7 +82,18 @@ def print_retailer_offering(player):
     for item in player.inventory:
         print("* {0} for {1} gold".format(item.name, math.floor(item.price*0.5)))
 
+def print_druid_offering(gamedata):
+    for item in gamedata.druid_offerings:
+        print("* {0} for {1} gold".format(item.name, item.price))
 
+def print_smith_offering(gamedata):
+    for item in gamedata.smith_offerings:
+        print("* {0} \t {1} gold \t +{2} {3}".format(item.name, item.price, item.value, item.influenced_attribute))
+
+def print_chest_items(chest):
+    for item in chest:
+        print("* {0} \t influenced_attribute={1} \t value={2} \t price={3}".format(item.name, item.influenced_attribute,
+                                                                                   item.value, item.price))
 def get_inventory_names(inventory):
     name_list =[]
     for item in inventory:

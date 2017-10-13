@@ -12,35 +12,58 @@ START, LIST, CHOOSE, QUIT = range(4)
 class Start(State):
     def run(self, gamedata, *args):
         if len(gamedata.player.inventory) == 0:
-            print("Sorry you have nothing to sell.")
-            print("Thanks for visiting\n")
+            print("Your inventory is empty.")
             return QUIT, gamedata
-        print("Welcome to the retailer {0}!".format(gamedata.player.name))
+        print("Welcome to your Inventory {0}".format(gamedata.player.name))
         return LIST, gamedata
 
     def next(self, next_state):
-        if next_state == QUIT:
-            return Retailer.quit
         if next_state == LIST:
-            return Retailer.list
+           return Inventory.list
+        if next_state == QUIT:
+            return Inventory.quit
 
 
 class List(State):
     def run(self, gamedata, *args):
         if len(gamedata.player.inventory) == 0:
-            print("You have nothing to sell left.")
-            print("Thanks for visiting.")
+            print("Your inventory is empty.")
             return QUIT, gamedata
-        print("This is what I would pay for your items:")
-        util.print_retailer_offering(gamedata.player)
-        print("You have {0} gold.\n".format(gamedata.player.gold))
-        return CHOOSE, gamedata
+        util.print_inventory_contents(gamedata.player)
+        i = input("Type 'quit' or the name of the item you want to use/drop:\n> ")
+        allowed_inputs = []
+        for item in gamedata.player.inventory:
+            allowed_inputs.append(item.name)
+        allowed_inputs.append("quit")
+        allowed_inputs.append("use")
+        allowed_inputs.append("drop")
+        if util.check_input(i, *allowed_inputs):
+            if i == "quit":
+                return QUIT, gamedata
+            inventory_names = util.get_inventory_names(gamedata.player.inventory)
+            if i in inventory_names:
+                i2 = input("Do you want to 'use' or 'drop' {0}? Else 'quit'.\n> "
+                           .format(inventory_names[inventory_names.index(i)]))  # print name of item
+                if util.check_input(i2, "use", "drop", "quit"):  # check if input2 is legal
+                    if i2 == "drop":
+                        gamedata.player.inventory.remove(gamedata.player.inventory[inventory_names.index(i)])
+                        return LIST, gamedata
+                    if i2 == "quit":
+                        return LIST, gamedata
+                    if i2 == "use":
+                        pass  # TODO implement use of potions
+                else:
+                    return LIST, gamedata
+
+        else:
+            return LIST, gamedata
+
 
     def next(self, next_state):
+        if next_state == LIST:
+            return Inventory.list
         if next_state == QUIT:
-            return Retailer.quit
-        if next_state == CHOOSE:
-            return Retailer.choose
+            return Inventory.quit
 
 
 class Choose(State):
@@ -63,27 +86,29 @@ class Choose(State):
 
     def next(self, next_state):
         if next_state == CHOOSE:
-            return Retailer.choose
+            return Inventory.choose
         if next_state == LIST:
-            return Retailer.list
+            return Inventory.list
 
 class Quit(State):
     def run(self, gamedata, *args):
-        print("Leaving Retailer.\n")
+        print("Leaving Inventory.\n")
         return None, gamedata
     def next(self, next_state):
         pass
 
 
-class Retailer(StateHandler):
+
+
+class Inventory(StateHandler):
     def __init__(self,gamedata):
-        StateHandler.__init__(self, Retailer.start, [Retailer.start, Retailer.list, Retailer.choose], Retailer.quit, gamedata)
+        StateHandler.__init__(self, Inventory.start, [Inventory.start, Inventory.list, Inventory.choose], Inventory.quit, gamedata)
 
 
-Retailer.start = Start()
-Retailer.list = List()
-Retailer.choose = Choose()
-Retailer.quit = Quit()
+Inventory.start = Start()
+Inventory.list = List()
+Inventory.choose = Choose()
+Inventory.quit = Quit()
 
 
 if __name__ == '__main__':
@@ -99,5 +124,5 @@ if __name__ == '__main__':
                                  Item(name="Potion", price=50, influenced_attribute="hp", value="30")]
     player_file = util.create_player_file(gamedata)
     gamedata.player = util.load_player("player.json")
-    ret = Retailer(gamedata)
+    ret = Inventory(gamedata)
     ret_gd = ret.run()

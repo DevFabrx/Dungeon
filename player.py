@@ -17,6 +17,6 @@ class Player:
         self.inventory = []
         self.__dict__.update(player)
 
-    def getAbilityPointSum(self):
+    def get_ability_point_sum(self):
         total_points = int(self.strength) + int(self.agility) + int(self.speed) + int(self.defense)
         return total_points

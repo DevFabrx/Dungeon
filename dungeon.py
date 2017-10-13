@@ -6,7 +6,7 @@ from room import Room
 from enemy import Enemy
 from item import Item
 from player import Player
-
+import inventory
 START, LOOK, MOVE, OPEN, ATTACK,FIGHT, INVENTORY, MENU, SUCCESS, EXIT, QUIT = range(11)
 
 class Start(State):
@@ -145,47 +145,18 @@ class Fight(State):
             return Dungeon.quit
         if next_state == SUCCESS:
             return Dungeon.success
-#TODO Implement Inventory State
+
+
 class Inventory(State):
     def run(self, gamedata, *args):
-        print("Welcome to your innventory {0}".format(gamedata.player.name))
-        util.print_inventory_contents(gamedata.player)
-        i = input("Type 'quit' or the name of the item you want to use/drop:\n> ")
-        allowed_inputs =[]
-        for item in gamedata.player.inventory:
-            allowed_inputs.append(item.name)
-        allowed_inputs.append("quit")
-        allowed_inputs.append("use")
-        allowed_inputs.append("drop")
-        if util.check_input(i, *allowed_inputs):
-            if i == "quit":
-                return MENU, gamedata
-            inventory_names = util.get_inventory_names(gamedata.player.inventory)
-            if i in inventory_names:
-                i2 = input("Do you want to 'use' or 'drop' {0}? Else 'quit'.\n> "
-                           .format(inventory_names[inventory_names.index(i)]))  # print name of item
-                if util.check_input(i2, "use", "drop", "quit"):  # check if input2 is legal
-                    if i2 == "drop":
-                        gamedata.player.inventory.remove(gamedata.player.inventory[inventory_names.index(i)])
-                        return INVENTORY, gamedata
-                    if i2 == "quit":
-                        return INVENTORY, gamedata
-                    if i2 == "use":
-                        pass  # TODO implement use of potions
+        inv = inventory.Inventory(gamedata)
+        inv_gd = inv.run()
+        return MENU, inv_gd
 
-
-
-                else:
-                    return INVENTORY, gamedata
-
-        else:
-            return INVENTORY, gamedata
     def next(self, next_state):
-        if next_state == INVENTORY:
-            return Dungeon.inventory
-        if next_state == MENU:
-            return Dungeon.menu
-# TODO implement Success State
+        return Dungeon.menu
+
+
 class Success(State):
     def run(self, gamedata, *args):
         print("You cleared the dungeon and killed the boss!")
