@@ -50,7 +50,7 @@ class Choose(State):
         allowed_inputs.append("quit")
         if util.check_input(i, *allowed_inputs):
             if i == "quit":
-                return LIST, gamedata
+                return QUIT, gamedata
             chosen_item = next((x for x in gamedata.player.inventory if x.name == i), None)
             gamedata.player.gold += math.floor(chosen_item.price * 0.5)
             print("You have choosen {0}.\nYou now have {1} gold.\nRemoved item from inventory.\n"

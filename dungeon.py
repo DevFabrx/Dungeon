@@ -130,6 +130,7 @@ class Fight(State):
             player.hp -= enemy_dmg_to_player
             print("{0} dealt {1} damage to {2}".format(enemy.name, enemy_dmg_to_player, player.name))
             if player.hp <= 0:
+                gamedata.gravedigger_offerings = player.inventory
                 player.inventory =[]
                 player.hp = 10
                 print("You died!")
@@ -207,7 +208,7 @@ class Move(State):
 
 class Exit(State):
     def run(self, gamedata, *args):
-        print("Leaving Dungeon.")
+        print("Leaving Dungeon.\n")
         return Quit, gamedata
     def next(self, next_state):
         return Dungeon.quit
@@ -234,7 +235,7 @@ class Dungeon(StateHandler):
        room2.treasure = Item(name="Sword", price=100, influenced_attribute="strength", value=40)
 
        room3 = Room()
-       room3_enemy1 = Enemy(name="Uruk-Hai", hp=50, defense=25, strength=20)
+       room3_enemy1 = Enemy(name="Uruk-Hai", hp=50, defense=25, strength=2000)
        room3_enemy2 = Enemy(name="Ork Archer", hp=20, agility=25)
        room3.enemies = [room3_enemy1, room3_enemy2]
        room3.description = "There are {0} enemies in this room.".format(len(room3.enemies))
@@ -245,7 +246,7 @@ class Dungeon(StateHandler):
 
 
        room5 = Room()
-       room5.enemies = [Enemy(hp=80, defense=30, strength=20, agility=20, name="OLAF", gold=10)]
+       room5.enemies = [Enemy(hp=80, defense=30, strength=100, agility=20, name="OLAF", gold=10)]
        room5.description = "In this room you find the Ork King {0}.".format(room5.enemies[0].name)
 
         # create array of rooms

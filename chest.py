@@ -10,12 +10,12 @@ START, DECIDE, STORE, TAKE, QUIT = range(5)
 class Start(State):
     def run(self, gamedata, *args):
         print("Welcome to your chest. Here you can safely store some items.")
-        if len(gamedata.chest) == 0:
+        if len(gamedata.player.chest) == 0:
             print("Currently you do not have anything stored in your chest.")
             return STORE, gamedata
         else:
             print("Here are your currently stored items:")
-            util.print_chest_items(gamedata.chest)
+            util.print_chest_items(gamedata.player.chest)
             return DECIDE, gamedata
 
     def next(self, next_state):
@@ -64,8 +64,8 @@ class Store(State):
             if i == "quit":
                 return QUIT, gamedata
             chosen_item = next((x for x in gamedata.player.inventory if x.name == i), None)
-            gamedata.chest = []
-            gamedata.chest.append(chosen_item)
+            gamedata.player.chest = []
+            gamedata.player.chest.append(chosen_item)
             print("You have choosen {0} to add to your chest.\nRemoved item from inventory.\n"
                   .format(chosen_item.name))
             gamedata.player.inventory.remove(chosen_item)
@@ -87,21 +87,21 @@ class Store(State):
 
 class Take(State):
     def run(self, gamedata, *args):
-        if len(gamedata.chest) == 0:
+        if len(gamedata.player.chest) == 0:
             print("Your chest is empty.")
             return START, gamedata
-        util.print_chest_items(gamedata.chest)
+        util.print_chest_items(gamedata.player.chest)
         i = input("What item do you want to take from the chest?\n> ")
-        allowed_inputs = util.get_inventory_names(gamedata.chest)
+        allowed_inputs = util.get_inventory_names(gamedata.player.chest)
         allowed_inputs.append("quit")
         if util.check_input(i, *allowed_inputs):
             if i == "quit":
                 return QUIT, gamedata
-            chosen_item = next((x for x in gamedata.chest if x.name == i), None)
+            chosen_item = next((x for x in gamedata.player.chest if x.name == i), None)
             gamedata.player.inventory.append(chosen_item)
             print("You have choosen {0} to add to your inventory.\nRemoved item from chest.\n"
                   .format(chosen_item.name))
-            gamedata.chest.remove(chosen_item)
+            gamedata.player.chest.remove(chosen_item)
             return START, gamedata
         else:
             print("Please insert the name of the item you want to take or 'quit'.")

@@ -35,23 +35,31 @@ class List(State):
         for item in gamedata.player.inventory:
             allowed_inputs.append(item.name)
         allowed_inputs.append("quit")
-        allowed_inputs.append("use")
-        allowed_inputs.append("drop")
         if util.check_input(i, *allowed_inputs):
             if i == "quit":
                 return QUIT, gamedata
             inventory_names = util.get_inventory_names(gamedata.player.inventory)
             if i in inventory_names:
+                chosen_item = next((x for x in gamedata.player.inventory if x.name == i), None)
                 i2 = input("Do you want to 'use' or 'drop' {0}? Else 'quit'.\n> "
-                           .format(inventory_names[inventory_names.index(i)]))  # print name of item
+                           .format(chosen_item.name)) # print name of item
                 if util.check_input(i2, "use", "drop", "quit"):  # check if input2 is legal
                     if i2 == "drop":
-                        gamedata.player.inventory.remove(gamedata.player.inventory[inventory_names.index(i)])
+                        print("Droppend {0}".format(chosen_item.name))
+                        gamedata.player.inventory.remove(chosen_item)
                         return LIST, gamedata
                     if i2 == "quit":
                         return LIST, gamedata
-                    if i2 == "use":
-                        pass  # TODO implement use of potions
+                    if i2 == "use":# TODO implement use of potions
+                        if chosen_item.type == "consumable":
+                            util.update_player_stats(gamedata.player, chosen_item)
+                            gamedata.player.inventory.remove(chosen_item)
+                            print("Increased your {0} by {1}".format(chosen_item.influenced_attribute, chosen_item.value))
+                            return LIST, gamedata
+                        else:
+                            print("{0} is not consumable. Please choose another item".format(chosen_item.name))
+                            return LIST, gamedata
+
                 else:
                     return LIST, gamedata
 
@@ -119,9 +127,9 @@ if __name__ == '__main__':
     gamedata.player.agility = 20
     gamedata.player.speed = 35
     gamedata.player.name = "Horst"
-    gamedata.player.inventory = [Item(name="Potion", price=50, influenced_attribute="hp", value="30"),
-                                 Item(name="Potion", price=50, influenced_attribute="hp", value="30"),
-                                 Item(name="Potion", price=50, influenced_attribute="hp", value="30")]
+    gamedata.player.inventory = [Item(type="consumable",name="Potion", price=50, influenced_attribute="hp", value="30"),
+                                 Item(type="consumable",name="Potion", price=50, influenced_attribute="hp", value="30"),
+                                 Item(type="consumable",name="Potion", price=50, influenced_attribute="hp", value="30")]
     player_file = util.create_player_file(gamedata)
     gamedata.player = util.load_player("player.json")
     ret = Inventory(gamedata)

@@ -50,41 +50,70 @@ class Strength(State):
         print("You have 100 points to assign to your character.\n Start now to assign those Points to your characters"
               " strength, agility, speed and defense")
         strength = input("assign strength: ")
-        gamedata.player.strength = int(strength)
-        return AGILITY, gamedata
+        try:
+            gamedata.player.strength = int(strength)
+            return AGILITY, gamedata
+        except ValueError:
+            print("Please insert an integer.")
+            return STRENGTH, gamedata
 
     def next(self, next_state):
-        return CreateCharacter.agility
+        if next_state == STRENGTH:
+            return CreateCharacter.strength
+        if next_state == AGILITY:
+            return CreateCharacter.agility
 
 
 class Agility(State):
     def run(self, gamedata, *args):
         agility = input("assign agility: ")
-        gamedata.player.agility = int(agility)
-        return SPEED, gamedata
+        try:
+            gamedata.player.agility = int(agility)
+            return SPEED, gamedata
+        except ValueError:
+            print("Please insert an integer.")
+            return AGILITY, gamedata
 
     def next(self, next_state):
-        return CreateCharacter.speed
+        if next_state == SPEED:
+            return CreateCharacter.speed
+        if next_state == AGILITY:
+            return CreateCharacter.agility
 
 
 class Speed(State):
     def run(self, gamedata, *args):
         speed = input("assign speed: ")
-        gamedata.player.speed = int(speed)
-        return DEFENSE, gamedata
+        try:
+            gamedata.player.speed = int(speed)
+            return DEFENSE, gamedata
+        except ValueError:
+            print("Please insert an integer.")
+            return SPEED, gamedata
+
 
     def next(self, next_state):
-        return CreateCharacter.defense
+        if next_state == SPEED:
+            return CreateCharacter.speed
+        if next_state == DEFENSE:
+            return CreateCharacter.defense
 
 
 class Defense(State):
     def run(self, gamedata, *args):
         defense = input("assign defense: ")
-        gamedata.player.defense = int(defense)
-        return CONFIRM, gamedata
+        try:
+            gamedata.player.defense = int(defense)
+            return CONFIRM, gamedata
+        except ValueError:
+            print("Please insert an integer.")
+            return DEFENSE, gamedata
 
     def next(self, next_state):
-        return CreateCharacter.confirm
+        if next_state == CONFIRM:
+            return CreateCharacter.confirm
+        if next_state == DEFENSE:
+            return CreateCharacter.defense
 
 
 class Confirm(State):
@@ -117,6 +146,8 @@ class Confirm(State):
             return CreateCharacter.strength
         if next_state == STORE:
             return CreateCharacter.store
+        if next_state == CONFIRM:
+            return CreateCharacter.confirm
 
 
 class Store(State):

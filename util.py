@@ -65,10 +65,15 @@ def load_player(savefile):
     player = Player(**json.load(fp))
     fp.close()
     items = []
+    chest = []
     for dict_item in player.inventory:
         item = Item(**dict_item)
         items.append(item)
     player.inventory = items
+    for dict_item in player.chest:
+        item = Item(**dict_item)
+        chest.append(item)
+    player.chest = chest
     return player
 
 def print_player_health(player):
@@ -89,6 +94,10 @@ def print_druid_offering(gamedata):
 def print_smith_offering(gamedata):
     for item in gamedata.smith_offerings:
         print("* {0} \t {1} gold \t +{2} {3}".format(item.name, item.price, item.value, item.influenced_attribute))
+
+def print_gravedigger_offering(gamedata):
+    for item in gamedata.gravedigger_offerings:
+        print("* {0} for {1} gold".format(item.name, math.floor(item.price*0.5)))
 
 def print_chest_items(chest):
     for item in chest:
@@ -112,6 +121,20 @@ def reset_player_stats(gamedata):
         else:
             vars(gamedata.player)[stat] = []
     return gamedata
+
+def update_player_stats(player, item):
+    if item.influenced_attribute == "hp":
+        player.hp += item.value
+    elif item.influenced_attribute == "strength":
+        player.strength += item.value
+    elif item.influenced_attribute == "agility":
+        player.agility += item.value
+    elif item.influenced_attribute == "speed":
+        player.speed += item.value
+
+def update_all_player_stats(player,inventory):
+    for item in inventory:
+        update_player_stats(player,item)
 
 
 def create_player_file(gamedata):

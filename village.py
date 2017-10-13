@@ -14,6 +14,7 @@ import dungeon
 import chest
 import smith
 import druid
+import gravedigger
 
 
 
@@ -22,13 +23,13 @@ import druid
 
 
 # define states
-START, LIST, CHOOSE, DUNGEON, INVENTORY, RETAILER, SMITH, DRUID, CHEST, SAVE, QUIT = range(11)
+START, LIST, CHOOSE, DUNGEON, INVENTORY, RETAILER, SMITH, DRUID, CHEST, GRAVEDIGGER, SAVE, QUIT = range(12)
 
 class Start(State):
     def run(self, gamedata, *args):
         print("You are now entering the village")
         print("The name of the village is Nurmgrad.")
-        print("The weather is cloudy, light rain is falling and people are moving silently in the streets.")
+        print("The weather is cloudy, light rain is falling and people are moving silently in the streets.\n")
         return LIST, gamedata
 
     def next(self, next_state):
@@ -44,8 +45,9 @@ class List(State):
         print("3. \t Smith")
         print("4. \t Druid")
         print("5. \t Chest")
-        print("6. \t Save")
-        print("7. \t Quit")
+        print("6. \t Gravedigger")
+        print("7. \t Save")
+        print("8. \t Quit")
 
         return CHOOSE, gamedata
     def next(self, next_state):
@@ -54,9 +56,9 @@ class List(State):
 
 class Choose(State):
     def run(self, gamedata, *args):
-        i = input("Please choose your destination [0-7]:\n> ")
+        i = input("Please choose your destination [0-8]:\n> ")
         print("")
-        if util.check_input(i, "0","1","2","3","4","5","6","7"):
+        if util.check_input(i, "0","1","2","3","4","5","6","7","8"):
             if i == "0":
                 return DUNGEON, gamedata
             elif i ==  "1":
@@ -70,11 +72,13 @@ class Choose(State):
             elif i == "5":
                 return CHEST, gamedata
             elif i == "6":
-                return SAVE, gamedata
+                return GRAVEDIGGER, gamedata
             elif i == "7":
+                return SAVE, gamedata
+            elif i == "8":
                 return QUIT, gamedata
         else:
-            print("Please enter a number from 0-7")
+            print("Please enter a number from 0-8")
             return CHOOSE, gamedata
 
     def next(self, next_state):
@@ -92,10 +96,12 @@ class Choose(State):
             return Village.druid
         elif next_state == CHEST:
             return Village.chest
+        elif next_state == GRAVEDIGGER:
+            return Village.gravedigger
         elif next_state == SAVE:
             return Village.save
         elif next_state == QUIT:
-            return Village.quit
+            return Quit()
 
 
 class Inventory(State):
@@ -107,7 +113,6 @@ class Inventory(State):
         return Village.list
 
 
-# TODO Implement Smith
 class Smith(State):
     def run(self, gamedata, *args):
         sm = smith.Smith(gamedata)
@@ -128,7 +133,6 @@ class Retailer(State):
             return Village.list
 
 
-#TODO Implement Druid
 class Druid(State):
     def run(self, gamedata, *args):
         dr = druid.Druid(gamedata)
@@ -150,6 +154,9 @@ class Dungeon(State):
 
 class Chest(State):
     def run(self, gamedata, *args):
+        if gamedata.b is False:
+            print("Only available when started with 'main.py -b'")
+            return LIST, gamedata
         box = chest.Chest(gamedata)
         box_gd = box.run()
         return LIST, box_gd
@@ -158,12 +165,31 @@ class Chest(State):
         if next_state == LIST:
             return Village.list
 
+class Gravedigger(State):
+    def run(self, gamedata, *args):
+        if gamedata.b is False:
+            print("Only available when started with 'main.py -b'")
+            return LIST, gamedata
+        grave = gravedigger.Gravedigger(gamedata)
+        grave_gd = grave.run()
+        return LIST, grave_gd
+
+    def next(self, next_state):
+        if next_state == LIST:
+            return Village.list
+
+
 class Save(State):
     def run(self, gamedata, *args):
-        with open("player.json", "w") as outfile:
-            json.dump(gamedata.player, outfile, cls=util.CustomEncoder)
-        print("Game saved.\n")
-        return LIST, gamedata
+        try:
+            with open("player.json", "w") as outfile:
+                json.dump(gamedata.player, outfile, cls=util.CustomEncoder)
+                print("Game saved.\n")
+            return LIST, gamedata
+        except:
+            print("Could not save game data!")
+            return LIST, gamedata
+
 
     def next(self, next_state):
         return Village.list
@@ -171,6 +197,7 @@ class Save(State):
 
 class Quit(State):
     def run(self, gamedata, *args):
+        print("Leaving game. See you next time.")
         return None, gamedata
     def next(self, next_state):
         pass
@@ -180,7 +207,8 @@ class Village(StateHandler):
     def __init__(self,gamedata):
         StateHandler.__init__(self, Village.start, {Village.start, Village.list, Village.choose, Village.dungeon,
                                                     Village.inventory, Village.retailer,
-                                                    Village.smith, Village.druid, Village.chest, Village.save, Village.quit}, Quit(),gamedata)
+                                                    Village.smith, Village.druid, Village.chest,
+                                                    Village.gravedigger, Village.save}, Quit(),gamedata)
 
 
 Village.start = Start()
@@ -192,8 +220,10 @@ Village.retailer = Retailer()
 Village.smith = Smith()
 Village.druid = Druid()
 Village.chest = Chest()
+Village.gravedigger = Gravedigger()
 Village.save = Save()
-Village.quit = Quit()
+
+
 
 
 if __name__ == '__main__':

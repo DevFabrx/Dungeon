@@ -11,9 +11,9 @@ class Player:
         self.special = 0
         self.lvl = 1
         self.xp = 0
-        self.gold = 0  # testing purpose (salesman)
+        self.gold = 100  # testing purpose (salesman)
         self.hp = 100
-        self.gear = []
+        self.chest = []
         self.inventory = []
         self.__dict__.update(player)
 
