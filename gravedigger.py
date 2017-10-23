@@ -58,6 +58,8 @@ class Choose(State):
             print("You have chosen {0}.\nYou now have {1} gold.\nAdded item to your inventory.\n"
                   .format(chosen_item.name, gamedata.player.gold))
             gamedata.player.inventory.append(chosen_item)
+            if chosen_item.type != "consumable":
+                util.update_player_stats(gamedata.player, chosen_item)
             gamedata.gravedigger_offerings.remove(chosen_item)
             return LIST, gamedata
         else:

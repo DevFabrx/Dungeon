@@ -1,5 +1,5 @@
 class Room:
-    def __init__(self, description=None, enemies=[], treasure=None):
+    def __init__(self, description=None, enemies=[], treasure=[]):
         self.description = description
         self.enemies = enemies
         self.treasure = treasure

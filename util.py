@@ -54,10 +54,13 @@ def print_character_stats(character):
     print("\tDefense: {0}".format(character.defense))
 
 
-def open_treasure(treasure):
+def print_treasure(treasure):
     print("You found:")
-    print("{0} \t price: {1} \t influenced attribute: {2} \t value: {3}".format(
-        treasure.name, treasure.price,treasure.influenced_attribute, treasure.value))
+    for item in treasure:
+        print("{0} \t price: {1} \t influenced attribute: {2} \t value: {3}".format(
+        item.name, item.price,item.influenced_attribute, item.value))
+
+
 
 
 def load_player(savefile):
@@ -76,12 +79,19 @@ def load_player(savefile):
     player.chest = chest
     return player
 
+
 def print_player_health(player):
     print("You have got {0} hp left!".format(player.hp))
 
 def print_inventory_contents(player):
     for item in player.inventory:
         print("* {0} \t --increases {1} by {2}".format(item.name, item.influenced_attribute, item.value))
+
+def get_treasure_contents(treasure):
+    name_list =[]
+    for item in treasure:
+        name_list.append(item.name)
+    return name_list
 
 def print_retailer_offering(player):
     for item in player.inventory:
